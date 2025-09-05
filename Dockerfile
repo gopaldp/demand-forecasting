@@ -1,40 +1,27 @@
-# syntax=docker/dockerfile:1
-FROM python:3.11-slim
-
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
-
-# System deps (helpful for some scientific wheels)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
-
+# Dockerfile
+FROM python:3.9-slim
 WORKDIR /app
 
-# Only copy requirements first to leverage Docker layer caching
-COPY requirements.txt /app/requirements.txt
+# LightGBM runtime dep
+RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Faster pip & no cache
+ENV PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+COPY requirements.txt ./
 RUN python -m pip install --upgrade pip \
-    && pip install -r requirements.txt
+ && pip install -r requirements.txt
 
-# Copy the rest (model, app, notebooks if needed)
-COPY lgbm_model.joblib /app/lgbm_model.joblib
-COPY streamlit_app.py /app/app.py
-# If you need notebooks inside the image, uncomment:
-# COPY notebooks /app/notebooks
+# Copy app
+COPY . .
 
-# Streamlit runs on 8501 by default
-EXPOSE 8501
-
-<<<<<<< HEAD
-# For Streamlit in container (no browser, friendly logs)
+# Streamlit in containers (headless)
 ENV STREAMLIT_SERVER_HEADLESS=true \
     STREAMLIT_SERVER_PORT=8501 \
-    STREAMLIT_SERVER_ENABLE_CORS=false
+    STREAMLIT_SERVER_ADDRESS=0.0.0.0 \
+    STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
 
-# Run the app (adjust if you use a different entrypoint)
-CMD ["streamlit", "run", "app.py"]
-=======
-# Step 7: Define the startup command
+EXPOSE 8501
 CMD ["streamlit", "run", "app.py", "--server.address=0.0.0.0"]
->>>>>>> 5c61f259cd1ff15bcedab8512d899b5ac4218483

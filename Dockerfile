@@ -26,6 +26,7 @@ COPY streamlit_app.py /app/app.py
 # Streamlit runs on 8501 by default
 EXPOSE 8501
 
+<<<<<<< HEAD
 # For Streamlit in container (no browser, friendly logs)
 ENV STREAMLIT_SERVER_HEADLESS=true \
     STREAMLIT_SERVER_PORT=8501 \
@@ -33,3 +34,7 @@ ENV STREAMLIT_SERVER_HEADLESS=true \
 
 # Run the app (adjust if you use a different entrypoint)
 CMD ["streamlit", "run", "app.py"]
+=======
+# Step 7: Define the startup command
+CMD ["streamlit", "run", "app.py", "--server.address=0.0.0.0"]
+>>>>>>> 5c61f259cd1ff15bcedab8512d899b5ac4218483

@@ -1,0 +1,10 @@
+services:
+  app:
+    image: ghcr.io/<your-github-username>/<your-repo>:main
+    container_name: demand-forecasting
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+    environment:
+      STREAMLIT_SERVER_ADDRESS: 0.0.0.0
+      STREAMLIT_BROWSER_GATHER_USAGE_STATS: "false"

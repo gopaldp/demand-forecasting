@@ -1,24 +1,35 @@
-# Step 1: Specify the base image
-FROM python:3.9-slim
+# syntax=docker/dockerfile:1
+FROM python:3.11-slim
 
-# Step 2: Set the working directory
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+# System deps (helpful for some scientific wheels)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
-# Step 3: Install the missing system dependency for LightGBM
-# apt-get update refreshes the package list
-# apt-get install -y libgomp1 installs the required library
-# The -y flag automatically answers "yes" to any prompts.
-RUN apt-get update && apt-get install -y libgomp1
+# Only copy requirements first to leverage Docker layer caching
+COPY requirements.txt /app/requirements.txt
+RUN python -m pip install --upgrade pip \
+    && pip install -r requirements.txt
 
-# Step 4: Copy and install Python dependencies
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy the rest (model, app, notebooks if needed)
+COPY lgbm_model.joblib /app/lgbm_model.joblib
+COPY streamlit_app.py /app/app.py
+# If you need notebooks inside the image, uncomment:
+# COPY notebooks /app/notebooks
 
-# Step 5: Copy the rest of your application code
-COPY . .
-
-# Step 6: Expose the port
+# Streamlit runs on 8501 by default
 EXPOSE 8501
 
-# Step 7: Define the startup command
+# For Streamlit in container (no browser, friendly logs)
+ENV STREAMLIT_SERVER_HEADLESS=true \
+    STREAMLIT_SERVER_PORT=8501 \
+    STREAMLIT_SERVER_ENABLE_CORS=false
+
+# Run the app (adjust if you use a different entrypoint)
 CMD ["streamlit", "run", "app.py"]

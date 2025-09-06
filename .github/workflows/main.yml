@@ -1,43 +1,34 @@
-# This is the name of our workflow. It will show up in the "Actions" tab on GitHub.
-name: Build and Push Docker Image
+# This is the name of our workflow.
+name: CI - Build and Push Docker Image
 
-# This section defines the "trigger" - what event causes this workflow to run.
+# This section defines the trigger.
 on:
-  # We want it to run every time there is a "push" to the "main" branch.
   push:
     branches: [ "main" ]
 
-# This section defines the "jobs" or tasks that will be executed.
-jobs:
-  # We have one job in this workflow, which we'll call "build-and-push".
-  build-and-push:
-    # This specifies the type of virtual machine to run the job on. "ubuntu-latest" is standard.
-    runs-on: ubuntu-latest
+# Define environment variables
+env:
+  DOCKER_IMAGE_NAME: gpatil9/demand-forecasting-app 
 
-    # These are the individual steps the job will perform in order.
+# This section defines the jobs that will be executed.
+jobs:
+  # We have only one job now: to build and push the image.
+  build-and-push:
+    name: Build and Push Docker Image to Docker Hub
+    runs-on: ubuntu-latest
     steps:
-      # Step 1: Check out the repository code.
-      # This uses a pre-built "action" made by GitHub to get your code into the virtual machine.
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 2: Log in to Docker Hub.
-      # This uses another pre-built action. It will use the secrets we created.
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Step 3: Build the Docker image and push it to Docker Hub.
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          # "context: ." tells the action to look for the Dockerfile in the root of our repo.
           context: .
-          # "push: true" tells the action to actually push the image after building it.
           push: true
-          # "tags: ..." is where we name our image.
-          # VERY IMPORTANT: Replace "your-dockerhub-username" with your actual Docker Hub username.
-          # "latest" means this will be the most recent version.
-          tags: gpatil9/demand-forecasting-app:latest
+          tags: ${{ env.DOCKER_IMAGE_NAME }}:latest

@@ -1,52 +1,42 @@
-# Architecture
+# Architecture Overview
 
-The **Sales Demand Forecasting** application is structured around a modular Python and Streamlit architecture that integrates data loading, dynamic time-series feature engineering, machine learning inference, and web-based visualization.
+This document describes the modular architecture, data flow, and core components of the **Sales Demand Forecasting** application.
 
-## Component Overview
+## System Components
 
-### 1. Main Interactive Application (`app.py`)
-The primary user-facing interface built with Streamlit. It orchestrates the full forecasting pipeline:
-- **Data Caching & Loading**: Loads historical sales data (`data/train.csv`) and the serialized LightGBM model (`lgbm_model.joblib`) utilizing Streamlit caching (`@st.cache_data` and `@st.cache_resource`).
-- **Sidebar Controls**: Allows users to select specific store IDs, item IDs, and forecast horizons ranging from 7 to 90 days.
-- **Historical Visualization**: Renders historical sales trends using Streamlit line charts.
-- **Dynamic Feature Engineering**: Extends historical time series with future placeholder dates, computes time-series lags and rolling window statistics across combined datasets, extracts calendar attributes, and executes model inference.
-- **Forecast Display**: Renders forecasted sales as interactive line charts and tabulated dataframes.
+The project consists of two primary applications, a pre-trained machine learning model, historical datasets, and containerization configurations:
 
-### 2. Model Inspection Utility (`streamlit_app.py`)
-An alternative auxiliary Streamlit application designed for model inspection and validation:
-- Extracts model feature schema dynamically (`n_features_in_`, `feature_name_`, or booster feature names).
-- Provides manual input fields or raw JSON payload input for custom feature vector prediction.
+1. **Main Interactive Dashboard (`app.py`)**:
+   - Built with **Streamlit**.
+   - Provides user controls in the sidebar for selecting a Store ID, Item ID, and forecast horizon (7 to 90 days).
+   - Loads historical sales data from `data/train.csv`.
+   - Renders historical sales charts and multi-step demand forecasts using the pre-trained LightGBM model.
 
-### 3. Machine Learning Model (`lgbm_model.joblib`)
-A pre-trained LightGBM regression model that expects a 14-feature input vector:
-- Identifiers and calendar features: `store`, `item`, `year`, `month`, `day`, `dayofweek`
-- Lag features: `sales_lag_7`, `sales_lag_14`, `sales_lag_28`, `sales_lag_365`
-- Rolling window features: `sales_rolling_mean_7`, `sales_rolling_std_7`, `sales_rolling_mean_28`, `sales_rolling_std_28`
+2. **Feature Engineering Pipeline (`engineer_features`)**:
+   - Located within `app.py`.
+   - Sorts time-series records by `[store, item, date]`.
+   - Computes lagging features: `sales_lag_7`, `sales_lag_14`, `sales_lag_28`, and `sales_lag_365`.
+   - Computes rolling window statistics (mean and standard deviation) over 7-day and 28-day windows.
+   - Extracts date components (`year`, `month`, `day`, `dayofweek`) for temporal modeling.
 
-### 4. Data Layer (`data/`)
-- `train.csv`: Historical training dataset containing columns `date`, `store`, `item`, and `sales`.
-- `test.csv`: Evaluation dataset.
+3. **Model Inspector (`streamlit_app.py`)**:
+   - A secondary Streamlit application.
+   - Loads `lgbm_model.joblib`.
+   - Inspects the model's feature schema (`n_features_in_`, booster feature names, or fallbacks).
+   - Allows users to test predictions via custom JSON payloads or manual numeric input fields.
 
-### 5. Training & Exploration (`notebooks/1-EDA-and-Modeling.ipynb`)
-Jupyter notebook containing exploratory data analysis (EDA), feature engineering validation, and model training logic used to produce `lgbm_model.joblib`.
+4. **Pre-trained Model (`lgbm_model.joblib`)**:
+   - A serialized **LightGBM** gradient boosted decision tree model trained on historical sales data.
 
-## Data and Control Flow
+5. **Data Layer (`data/`)**:
+   - `data/train.csv`: Historical training data containing `date`, `store`, `item`, and `sales`.
+   - `data/test.csv`: Test dataset for evaluation.
 
-```text
-[data/train.csv] ──> load_data() ──> Filter by Store & Item ──> Historical Display
-                                                                      │
-[lgbm_model.joblib] ──> load_model()                                  ▼
-                                            Combine Historical + Future Dates
-                                                                      │
-                                                                      ▼
-                                                       engineer_features(combined_df)
-                                                                      │
-                                                                      ▼
-                                                       Extract Calendar Attributes
-                                                                      │
-                                                                      ▼
-                                                           model.predict(features)
-                                                                      │
-                                                                      ▼
-                                                         Forecast Line Chart & Table
-```
+## Data & Control Flow
+
+1. **User Request**: The user selects a store and item in the Streamlit UI (`app.py`) and specifies the forecast horizon $N$ (7–90 days).
+2. **Historical Context Retrieval**: The app filters `data/train.csv` for the selected store and item.
+3. **Future Frame Construction**: Appends $N$ future date rows with placeholder sales values.
+4. **Feature Extraction**: `engineer_features()` processes the combined historical and future DataFrame to dynamically generate lag and rolling features.
+5. **Inference**: The LightGBM model (`lgbm_model.joblib`) evaluates the feature matrix for future dates, outputting rounded integer sales predictions.
+6. **Visualization**: Streamlit renders interactive line charts and tabular summaries of the forecasted demand.

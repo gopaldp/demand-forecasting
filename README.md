@@ -1,101 +1,97 @@
 # Sales Demand Forecasting
 
-An interactive sales demand forecasting application powered by LightGBM and Streamlit. The application allows users to select a store, an item, and a forecast horizon (7–90 days) to visualize historical sales data and generate future sales predictions based on robust time-series feature engineering.
+An interactive sales demand forecasting application built with Python, LightGBM, and Streamlit. It allows users to view historical sales and generate multi-day demand forecasts for any store and item combination.
 
 ## Key Features
 
-- **Interactive Streamlit Dashboard (`app.py`)**: Main application offering store and item filtering, historical sales visualization, and custom forecast horizons (7 to 90 days).
-- **Alternative Inspection App (`streamlit_app.py`)**: Simplified utility app for inspecting the trained LightGBM model feature schema and making direct predictions with custom numerical inputs or JSON payloads.
-- **Automated Feature Engineering**: Computes rigorous time-series features on-the-fly including sales lags (7, 14, 28, 365 days) and rolling window statistics (mean and standard deviation over 7 and 28 days) per store and item.
-- **Pre-trained LightGBM Model**: Utilizes a serialized LightGBM regression model (`lgbm_model.joblib`) trained on historical sales datasets.
+- **Interactive Streamlit Dashboard (`app.py`)**: Select store IDs, item IDs, and forecast horizons (7 to 90 days) to visualize historical sales trends and generated forecasts.
+- **Advanced Feature Engineering**: Computes time-series lags (7, 14, 28, and 365 days) and rolling window statistics (mean and standard deviation over 7 and 28 days) per store and item.
+- **LightGBM Model**: Uses a pre-trained gradient boosting model (`lgbm_model.joblib`) for fast and accurate demand predictions.
+- **Model Inspector App (`streamlit_app.py`)**: A secondary interface for inspecting the underlying model's feature schema and making direct predictions.
+- **Containerization & Deployment Support**: Fully configured with a `Dockerfile` and Dev Container setup for seamless containerized execution.
 
 ## Tech Stack
 
 - **Python** (3.9 / 3.11)
-- **Data Manipulation & Analysis**: `pandas`, `NumPy`
-- **Machine Learning**: `lightgbm`, `scikit-learn`, `joblib`
-- **Interactive UI**: `streamlit`
-- **Environment & Deployment**: Docker (`Dockerfile`), Dev Containers (`.devcontainer/devcontainer.json`)
+- **Data Manipulation & Scientific Computing**: `pandas`, `NumPy`
+- **Machine Learning**: `scikit-learn`, `lightgbm`, `joblib`
+- **Web UI**: `Streamlit`
+- **Environment & Deployment**: Docker, Dev Containers
 
 ## Prerequisites
 
-- Python 3.9+
-- pip
-- System libraries: `libgomp1` (required for LightGBM on Linux environments)
+- Python 3.9 or higher
+- `pip` package manager
 
 ## Installation
 
-1. Clone the repository:
+1. Clone the repository and navigate into the project directory:
    ```bash
-   git clone https://github.com/gopaldp/demand-forecasting.git
+   git clone <repository-url>
    cd demand-forecasting
    ```
 
-2. Install Python dependencies:
+2. Install the required dependencies:
    ```bash
    pip install -r requirements.txt
    ```
 
 ## Usage
 
-### Running the Main Streamlit App
-
-To launch the main interactive sales demand forecaster:
+### Main Forecasting App
+Run the primary interactive Streamlit dashboard:
 ```bash
 streamlit run app.py
 ```
-The app will be accessible at `http://localhost:8501`.
+Open your browser at `http://localhost:8501` to interact with the dashboard, choose stores/items, adjust the forecast horizon, and generate demand forecasts.
 
-### Running the Model Inspector App
-
-To launch the alternative feature schema inspection app:
+### Model Inspector App
+To inspect model feature schemas and test individual feature vectors via JSON or manual inputs:
 ```bash
 streamlit run streamlit_app.py
 ```
 
 ## Configuration
 
-This project does not require environment variables or external configuration files. All inputs are handled interactively through the Streamlit UI.
+The application operates out-of-the-box using the provided data and pre-trained model binaries. No external environment variables or `.env` files are required for local execution.
 
 ## Project Structure
 
 ```text
 demand-forecasting/
-├── app.py                # Main interactive Streamlit application
-├── streamlit_app.py      # Alternative model inspection and prediction app
-├── lgbm_model.joblib     # Pre-trained LightGBM model binary
-├── requirements.txt      # Python dependencies
-├── Dockerfile            # Docker image configuration (Python 3.9-slim)
-├── .devcontainer/        # Dev Container configuration
-│   └── devcontainer.json
-├── data/                 # Training and test datasets
-│   ├── train.csv         # Historical sales data (date, store, item, sales)
-│   └── test.csv
-└── notebooks/            # Jupyter notebooks for EDA and modeling
-    └── 1-EDA-and-Modeling.ipynb
+├── app.py                  # Main Streamlit forecasting dashboard
+├── streamlit_app.py        # Secondary model feature inspection app
+-─ lgbm_model.joblib        # Pre-trained LightGBM model binary
+├── requirements.txt        # Python package dependencies
+├── Dockerfile              # Docker container configuration
+├── data/
+│   ├── train.csv           # Historical training data (date, store, item, sales)
+│   └── test.csv            # Test dataset
+├── notebooks/
+│   └── 1-EDA-and-Modeling.ipynb # Exploratory data analysis and model training notebook
+└── .devcontainer/
+    └── devcontainer.json   # VS Code Dev Container configuration
 ```
 
 ## Testing
 
-Currently, automated test suites are not configured in this repository. Model training and exploration workflows are documented in `notebooks/1-EDA-and-Modeling.ipynb`.
+*Note: Automated test suites are not currently implemented in this repository. Model validation and exploratory analysis are documented in `notebooks/1-EDA-and-Modeling.ipynb`.*
 
 ## Docker & Deployment
 
-### Building and Running with Docker
+To build and run the application via Docker:
 
 1. Build the Docker image:
    ```bash
    docker build -t demand-forecasting .
    ```
-
-2. Run the Docker container:
+2. Run the container:
    ```bash
    docker run -p 8501:8501 demand-forecasting
    ```
+   Access the app at `http://localhost:8501`.
 
-3. Open your browser and navigate to `http://localhost:8501`.
+## Documentation
 
-## Links to Documentation
-
-- [Architecture (`docs/architecture.md`)](docs/architecture.md)
-- [Local Setup & Troubleshooting (`docs/setup.md`)](docs/setup.md)
+- [Architecture Overview](docs/architecture.md)
+- [Setup Guide](docs/setup.md)
